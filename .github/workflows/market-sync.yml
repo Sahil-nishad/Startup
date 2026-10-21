@@ -1,0 +1,25 @@
+name: IPO data synchronization
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0,30 * * * *"
+permissions: {}
+concurrency:
+  group: market-sync
+  cancel-in-progress: false
+jobs:
+  sync:
+    if: vars.MARKET_SYNC_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Call authenticated bounded sync
+        env:
+          APP_URL: ${{ vars.PUBLIC_APP_URL }}
+          SYNC_SECRET: ${{ secrets.SYNC_SECRET }}
+        run: |
+          test -n "$APP_URL" && test -n "$SYNC_SECRET"
+          curl --fail-with-body --silent --show-error --max-time 180 \
+            -H "Authorization: Bearer $SYNC_SECRET" \
+            -H 'Content-Type: application/json' \
+            --data '{"job":"auto"}' "$APP_URL/api/admin/sync"

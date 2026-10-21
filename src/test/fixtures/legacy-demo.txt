@@ -1,0 +1,134 @@
+// Sample dataset for demonstration. All figures are illustrative, not live market data.
+export type Category = "Mainboard" | "SME";
+export type Exchange = "NSE" | "BSE" | "NSE, BSE";
+export type Status = "Upcoming" | "Open" | "Closed" | "Listed";
+
+export interface GmpPoint { date: string; gmp: number }
+export interface Subscription { qib: number; nii: number; retail: number; employee?: number; total: number }
+export interface Financial { year: string; revenue: number; ebitda: number; profit: number; netWorth: number; borrowings: number }
+
+export interface Ipo {
+  slug: string;
+  name: string;
+  symbol: string;
+  sector: string;
+  category: Category;
+  exchange: Exchange;
+  priceLow: number;
+  priceHigh: number;
+  lot: number;
+  issueSizeCr: number;
+  freshCr: number;
+  ofsCr: number;
+  open: string;
+  close: string;
+  allotment: string;
+  listing: string;
+  registrar: string;
+  leadManager: string;
+  about: string;
+  gmpHistory: GmpPoint[];
+  subscription?: Subscription;
+  listingPrice?: number;
+  currentPrice?: number;
+  financials: Financial[];
+  strengths: string[];
+  risks: string[];
+}
+
+const DAY = 86400000;
+const base = new Date();
+base.setHours(0, 0, 0, 0);
+const d = (offset: number) => new Date(base.getTime() + offset * DAY).toISOString().slice(0, 10);
+
+function gmpSeries(start: number, end: number, endOffset: number, days = 8): GmpPoint[] {
+  return Array.from({ length: days }, (_, i) => {
+    const t = i / (days - 1);
+    const noise = Math.round(Math.sin(i * 1.7 + start) * Math.max(2, Math.abs(end - start) * 0.12));
+    return { date: d(endOffset - (days - 1 - i)), gmp: Math.max(0, Math.round(start + (end - start) * t + (i === days - 1 ? 0 : noise))) };
+  });
+}
+
+function fin(rev: number, margin: number): Financial[] {
+  return ["FY23", "FY24", "FY25"].map((year, i) => {
+    const r = Math.round(rev * Math.pow(1.22, i));
+    return { year, revenue: r, ebitda: Math.round(r * (margin + 0.06)), profit: Math.round(r * margin), netWorth: Math.round(r * 0.55 * (1 + i * 0.2)), borrowings: Math.round(r * 0.18 * (1 - i * 0.1)) };
+  });
+}
+
+type Seed = Omit<Ipo, "slug" | "open" | "close" | "allotment" | "listing" | "gmpHistory" | "financials" | "strengths" | "risks" | "registrar" | "leadManager"> & {
+  openOff: number; gmpStart: number; gmpEnd: number; rev: number; margin: number; registrar?: string; leadManager?: string;
+};
+
+const seeds: Seed[] = [
+  { name: "Aravalli Grid Solutions", symbol: "ARAVALLI", sector: "Power equipment", category: "Mainboard", exchange: "NSE, BSE", priceLow: 412, priceHigh: 434, lot: 34, issueSizeCr: 1840, freshCr: 1200, ofsCr: 640, openOff: -1, gmpStart: 55, gmpEnd: 92, rev: 2100, margin: 0.09, about: "Manufactures transformers, switchgear and substation automation systems for state utilities and private transmission developers.", subscription: { qib: 4.2, nii: 11.8, retail: 6.4, employee: 3.1, total: 6.9 } },
+  { name: "Konkan Coastal Foods", symbol: "KONKANF", sector: "Packaged foods", category: "Mainboard", exchange: "NSE, BSE", priceLow: 268, priceHigh: 282, lot: 53, issueSizeCr: 720, freshCr: 450, ofsCr: 270, openOff: -2, gmpStart: 30, gmpEnd: 21, rev: 980, margin: 0.07, about: "Processes and exports frozen seafood and ready-to-cook coastal cuisine under the Konkan Kitchen brand.", subscription: { qib: 1.1, nii: 2.4, retail: 3.2, total: 2.3 } },
+  { name: "Nirmaan Steel Tubes", symbol: "NIRMAAN", sector: "Steel products", category: "SME", exchange: "NSE", priceLow: 96, priceHigh: 101, lot: 1200, issueSizeCr: 48, freshCr: 48, ofsCr: 0, openOff: -2, gmpStart: 18, gmpEnd: 34, rev: 160, margin: 0.06, about: "Produces ERW pipes and hollow sections for construction and agricultural irrigation in Gujarat and Rajasthan.", subscription: { qib: 38.2, nii: 142.5, retail: 96.1, total: 88.7 } },
+  { name: "Saffron Fintech Services", symbol: "SAFFRON", sector: "Financial services", category: "Mainboard", exchange: "NSE, BSE", priceLow: 590, priceHigh: 621, lot: 24, issueSizeCr: 2650, freshCr: 800, ofsCr: 1850, openOff: 3, gmpStart: 40, gmpEnd: 48, rev: 1500, margin: 0.14, about: "Provides payment gateway, merchant lending and point-of-sale software to small and mid-sized retailers." },
+  { name: "Brahmaputra Logistics", symbol: "BRAHMLOG", sector: "Logistics", category: "Mainboard", exchange: "NSE, BSE", priceLow: 188, priceHigh: 198, lot: 75, issueSizeCr: 610, freshCr: 610, ofsCr: 0, openOff: 6, gmpStart: 12, gmpEnd: 15, rev: 840, margin: 0.05, about: "Operates warehousing and multimodal freight services across the North-East corridor." },
+  { name: "Vedika Pharma Labs", symbol: "VEDIKA", sector: "Pharmaceuticals", category: "SME", exchange: "BSE", priceLow: 72, priceHigh: 76, lot: 1600, issueSizeCr: 32, freshCr: 26, ofsCr: 6, openOff: 4, gmpStart: 6, gmpEnd: 9, rev: 95, margin: 0.08, about: "Contract manufacturer of oral solid dosage formulations for domestic and African markets." },
+  { name: "Tarang Renewables", symbol: "TARANG", sector: "Renewable energy", category: "Mainboard", exchange: "NSE, BSE", priceLow: 315, priceHigh: 332, lot: 45, issueSizeCr: 3100, freshCr: 2400, ofsCr: 700, openOff: -6, gmpStart: 60, gmpEnd: 74, rev: 2600, margin: 0.11, about: "Independent power producer with 2.4 GW of operational solar and wind capacity.", subscription: { qib: 112.4, nii: 64.8, retail: 18.2, employee: 9.4, total: 68.3 } },
+  { name: "Meenakshi Textiles", symbol: "MEENTEX", sector: "Textiles", category: "SME", exchange: "NSE", priceLow: 52, priceHigh: 55, lot: 2000, issueSizeCr: 22, freshCr: 22, ofsCr: 0, openOff: -5, gmpStart: 4, gmpEnd: 0, rev: 70, margin: 0.04, about: "Weaves and processes cotton fabrics for garment exporters in Tiruppur.", subscription: { qib: 1.4, nii: 2.1, retail: 3.6, total: 2.6 } },
+  { name: "Himalaya Cloud Networks", symbol: "HIMCLOUD", sector: "IT services", category: "Mainboard", exchange: "NSE, BSE", priceLow: 740, priceHigh: 780, lot: 19, issueSizeCr: 1420, freshCr: 600, ofsCr: 820, openOff: -14, gmpStart: 120, gmpEnd: 168, rev: 1100, margin: 0.16, about: "Data centre colocation and managed cloud services provider with facilities in Mumbai, Chennai and Noida.", subscription: { qib: 182.6, nii: 98.4, retail: 22.7, employee: 14.1, total: 104.2 }, listingPrice: 962, currentPrice: 1018 },
+  { name: "Godavari Agro Chem", symbol: "GODAGRO", sector: "Agrochemicals", category: "Mainboard", exchange: "NSE, BSE", priceLow: 228, priceHigh: 240, lot: 62, issueSizeCr: 880, freshCr: 300, ofsCr: 580, openOff: -20, gmpStart: 22, gmpEnd: 8, rev: 1300, margin: 0.06, about: "Manufactures crop protection chemicals and speciality fertilisers.", subscription: { qib: 2.8, nii: 1.9, retail: 1.6, total: 2.1 }, listingPrice: 236, currentPrice: 221 },
+  { name: "Pinnacle Auto Components", symbol: "PINNAUTO", sector: "Auto ancillary", category: "Mainboard", exchange: "NSE, BSE", priceLow: 455, priceHigh: 478, lot: 31, issueSizeCr: 1250, freshCr: 750, ofsCr: 500, openOff: -27, gmpStart: 70, gmpEnd: 96, rev: 1900, margin: 0.1, about: "Supplies precision-machined powertrain and EV motor housings to Indian and European OEMs.", subscription: { qib: 96.3, nii: 54.2, retail: 15.8, employee: 7.2, total: 58.9 }, listingPrice: 571, currentPrice: 604 },
+  { name: "Shree Ganesh Jewellers", symbol: "SGJEWEL", sector: "Jewellery retail", category: "SME", exchange: "BSE", priceLow: 118, priceHigh: 124, lot: 1000, issueSizeCr: 41, freshCr: 41, ofsCr: 0, openOff: -33, gmpStart: 25, gmpEnd: 42, rev: 210, margin: 0.03, about: "Operates nine gold and diamond jewellery showrooms across Maharashtra.", subscription: { qib: 61.2, nii: 210.4, retail: 132.8, total: 128.5 }, listingPrice: 170, currentPrice: 158 },
+  { name: "Coromandel Hospitals", symbol: "CORHOSP", sector: "Healthcare", category: "Mainboard", exchange: "NSE, BSE", priceLow: 652, priceHigh: 686, lot: 21, issueSizeCr: 2200, freshCr: 1000, ofsCr: 1200, openOff: -41, gmpStart: 50, gmpEnd: 38, rev: 1750, margin: 0.12, about: "Runs 14 multi-speciality hospitals across Tamil Nadu and Andhra Pradesh.", subscription: { qib: 24.6, nii: 9.8, retail: 4.1, employee: 2.6, total: 14.2 }, listingPrice: 724, currentPrice: 752 },
+  { name: "Urban Nest Realty", symbol: "URBNEST", sector: "Real estate", category: "Mainboard", exchange: "NSE, BSE", priceLow: 380, priceHigh: 400, lot: 37, issueSizeCr: 1600, freshCr: 1600, ofsCr: 0, openOff: -48, gmpStart: 10, gmpEnd: -6, rev: 1200, margin: 0.08, about: "Residential developer focused on mid-income housing in Pune and Bengaluru.", subscription: { qib: 1.6, nii: 0.9, retail: 1.2, total: 1.3 }, listingPrice: 381, currentPrice: 352 },
+  { name: "Kaveri Speciality Chemicals", symbol: "KAVERI", sector: "Chemicals", category: "SME", exchange: "NSE", priceLow: 84, priceHigh: 89, lot: 1600, issueSizeCr: 36, freshCr: 30, ofsCr: 6, openOff: 9, gmpStart: 10, gmpEnd: 14, rev: 120, margin: 0.09, about: "Produces dye intermediates and pigment additives for the textile and printing industries." },
+];
+
+export const ipos: Ipo[] = seeds.map((s) => {
+  const slug = s.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  const gmpEndOff = Math.min(s.openOff + 5, 0);
+  const { openOff, gmpStart, gmpEnd, rev, margin, ...rest } = s;
+  return {
+    ...rest,
+    slug,
+    open: d(openOff),
+    close: d(openOff + 2),
+    allotment: d(openOff + 3),
+    listing: d(openOff + 5),
+    registrar: s.registrar ?? (s.category === "SME" ? "Bigshare Services" : "KFin Technologies"),
+    leadManager: s.leadManager ?? (s.category === "SME" ? "Hem Securities" : "Axis Capital, ICICI Securities"),
+    gmpHistory: gmpSeries(gmpStart, gmpEnd, gmpEndOff, openOff > 0 ? 4 : 8),
+    financials: fin(rev, margin),
+    strengths: ["Established customer relationships across key accounts", "Consistent revenue growth over the last three financial years", "Diversified product portfolio"],
+    risks: ["Dependence on a limited number of customers for a large share of revenue", "Exposure to raw material price volatility", "Grey market premium is unofficial and can change sharply before listing"],
+  };
+});
+
+export const todayIso = () => d(0);
+
+export function statusOf(ipo: Ipo): Status {
+  const t = todayIso();
+  if (t < ipo.open) return "Upcoming";
+  if (t <= ipo.close) return "Open";
+  if (t < ipo.listing) return "Closed";
+  return "Listed";
+}
+
+export const latestGmp = (ipo: Ipo) => ipo.gmpHistory[ipo.gmpHistory.length - 1]?.gmp ?? 0;
+export const gmpPct = (ipo: Ipo) => (latestGmp(ipo) / ipo.priceHigh) * 100;
+export const estListing = (ipo: Ipo) => ipo.priceHigh + latestGmp(ipo);
+export const minInvestment = (ipo: Ipo) => ipo.priceHigh * ipo.lot;
+export const listingGainPct = (ipo: Ipo) => (ipo.listingPrice ? ((ipo.listingPrice - ipo.priceHigh) / ipo.priceHigh) * 100 : undefined);
+export const getIpo = (slug: string) => ipos.find((i) => i.slug === slug);
+
+export const inr = (n: number) => "₹" + n.toLocaleString("en-IN");
+export const cr = (n: number) => "₹" + n.toLocaleString("en-IN") + " Cr";
+export const pct = (n: number, digits = 1) => (n > 0 ? "+" : "") + n.toFixed(digits) + "%";
+export const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+export const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const parts = (iso: string) => { const [y, m, dd] = iso.split("-").map(Number); return { y: y!, m: m! - 1, d: dd! }; };
+export const shortDate = (iso: string) => { const p = parts(iso); return `${String(p.d).padStart(2, "0")} ${MONTHS[p.m]!.slice(0, 3)}`; };
+export const fmtDate = (iso: string) => `${shortDate(iso)} ${parts(iso).y}`;
+export const longToday = () => { const iso = todayIso(); const p = parts(iso); return `${WEEKDAYS[new Date(p.y, p.m, p.d).getDay()]}, ${p.d} ${MONTHS[p.m]}`; };
+
+export interface Article { slug: string; title: string; kind: "Guide" | "Report"; summary: string; body: string[] }
+export const articles: Article[] = [
+  { slug: "what-is-gmp", title: "What is grey market premium (GMP)?", kind: "Guide", summary: "How the unofficial grey market works and why GMP should never be your only signal.", body: ["Grey market premium is the price above the issue price at which IPO shares are informally traded before listing. It is unregulated and not backed by any exchange.", "GMP reflects short-term sentiment. It can move sharply within hours and frequently diverges from actual listing prices.", "Use GMP alongside subscription demand, company financials and valuation, never as a standalone indicator."] },
+  { slug: "how-to-apply", title: "How to apply for an IPO through UPI", kind: "Guide", summary: "A step-by-step guide to bidding via your broker or bank ASBA.", body: ["Log in to your broker or net banking, pick the IPO and choose the number of lots.", "Enter your UPI ID and approve the mandate request in your UPI app before the cut-off time on the closing day.", "Funds stay blocked in your account until allotment. If you are not allotted shares, the block is released."] },
+  { slug: "reading-subscription", title: "Reading subscription data by category", kind: "Guide", summary: "What QIB, NII and retail subscription numbers tell you.", body: ["QIB (qualified institutional buyers) demand is often viewed as a signal of institutional conviction.", "NII (non-institutional investors) includes HNIs and is frequently leveraged, making it volatile.", "Retail subscription shows individual investor demand and directly affects your allotment probability."] },
+  { slug: "listing-performance-review", title: "Listing performance review: last 30 days", kind: "Report", summary: "How recent IPOs listed against issue price and pre-listing GMP.", body: ["This report compares each recently listed IPO's listing price with its issue price and final reported GMP.", "Issues with strong QIB demand tended to list above issue price in this sample.", "Figures shown are sample data for demonstration."] },
+];

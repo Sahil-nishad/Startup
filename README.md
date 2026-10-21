@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Welcome to your Lovable project
 
-## Getting Started
+## Database-backed IPO application
 
-First, run the development server:
+The active application is **TanStack Start + React 19 + TypeScript + Vite + Tailwind**, using npm. `src/app` is an inactive Next.js scaffold and is excluded from the active TypeScript project. Existing pages retain their layout. The production app has no sample IPO fallback.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+See [backend setup, source mapping, administration and deployment](docs/BACKEND.md) for the complete operating guide.
+
+Quick local start (Node 22.14+):
+
+```sh
+npm ci
+# Copy .env.example to .env and configure the operator secrets described in docs/BACKEND.md.
+npm run dev -- --host 127.0.0.1 --port 8081
+# In another terminal, after the web server starts:
+npm run admin -- sync auto
+npm run sync:worker
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:8081. Local PGlite stores PostgreSQL data in `.local/market-db`; production requires a managed PostgreSQL `DATABASE_URL`. The local database is initialized automatically by the web process. Do not open the same PGlite directory from two processes.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```sh
+npm run typecheck
+npm run lint
+npm test
+npm run build
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The tests use mocked providers and an isolated in-memory PostgreSQL instance, without upstream requests. Optional licensed feeds, current share prices, official documents and financial statements are not falsely presented as available. See the operating guide for exact limitations.
 
-## Learn More
+This project was built with [Lovable](https://lovable.dev).
 
-To learn more about Next.js, take a look at the following resources:
+## Build with Lovable
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open your project in the [Lovable editor](https://lovable.dev) and keep building.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Ship faster**: describe what you want to build and Lovable handles the code.
+- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
+- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
 
-## Deploy on Vercel
+## Development
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```sh
+git clone <this-repository-url>
+cd <repository-name>
+npm i
+npm run dev
+```
+
+## Built with
+
+- TanStack Start
+- TypeScript
+- React
+- Tailwind CSS
