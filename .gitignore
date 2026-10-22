@@ -40,3 +40,6 @@ skills-lock.json
 *.njsproj
 *.sln
 *.sw?
+
+# Vercel project metadata
+.vercel/
