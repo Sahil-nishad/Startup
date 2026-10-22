@@ -22,6 +22,10 @@ dist-ssr
 .next/
 coverage/
 
+# Agent tooling
+.agents/
+skills-lock.json
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
