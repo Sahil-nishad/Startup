@@ -135,7 +135,7 @@ export class XflotProvider implements Provider {
         const points = r.gmp?.length
           ? r.gmp
           : r.lastGmp !== null
-            ? [{ gmp: r.lastGmp, gmpPct: r.lastGmpPct, observedAt: r.updatedAt }]
+            ? [{ gmp: r.lastGmp, gmpPct: r.lastGmpPct, observedAt: null }]
             : [];
         for (const point of points) {
           if (point.gmp === null) continue;

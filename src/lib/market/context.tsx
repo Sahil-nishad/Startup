@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { MarketSnapshot } from "../ipo-data";
 const empty: MarketSnapshot = {
   items: [],
-  total: 0,
+  total: null,
   available: false,
   error: null,
   sources: [],

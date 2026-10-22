@@ -51,9 +51,17 @@ export async function readMarket(filter: ReadFilter = {}, db?: Db): Promise<Mark
   if (filter.from) add("open_date>=?::date", filter.from);
   if (filter.to) add("open_date<=?::date", filter.to);
   const clause = where.length ? " WHERE " + where.join(" AND ") : "";
-  const total = Number(
+  const matched = Number(
     (await db.query<{ n: string }>("SELECT count(*) n FROM ipos" + clause, args)).rows[0]?.n ?? 0,
   );
+  let total: number | null = matched;
+  if (matched === 0 && !where.length) total = null;
+  else if (matched === 0) {
+    const all = Number(
+      (await db.query<{ n: string }>("SELECT count(*) n FROM ipos")).rows[0]?.n ?? 0,
+    );
+    if (all === 0) total = null;
+  }
   const order =
     (
       {
@@ -284,7 +292,7 @@ export async function safeSnapshot(): Promise<MarketSnapshot> {
   } catch {
     return {
       items: [],
-      total: 0,
+      total: null,
       available: false,
       error: "Market data temporarily unavailable. Please try again.",
       sources: [],

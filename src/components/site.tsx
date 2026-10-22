@@ -61,7 +61,12 @@ export function Header() {
                   ? "bg-primary/10 font-semibold text-primary hover:bg-primary/15"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
-              activeProps={{ className: n.to === "/calendar" ? "bg-primary text-primary-foreground" : "text-foreground font-semibold bg-muted" }}
+              activeProps={{
+                className:
+                  n.to === "/calendar"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-foreground font-semibold bg-muted",
+              }}
             >
               {n.to === "/calendar" && <CalendarDays className="h-3.5 w-3.5" />}
               {n.label}
@@ -470,7 +475,9 @@ export function SampleNote() {
       {data.error && <p>{data.error}</p>}
       {!data.items.length && (
         <p>
-          {data.available ? "No IPO records are available yet." : "Market data is unavailable."}
+          {data.available
+            ? "No IPO records are stored yet; market coverage is unknown."
+            : "Market data is unavailable."}
         </p>
       )}
       <p className="font-semibold text-foreground">

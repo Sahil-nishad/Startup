@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, CalendarDays, Search, SlidersHorizontal } from "lucide-react";
-import { useIpos } from "@/lib/market/context";
+import { useIpos, useMarket } from "@/lib/market/context";
 import {
   gmpPct,
   inr,
@@ -73,6 +73,7 @@ const compactSubscription = (ipo: Ipo) => {
 
 function Home() {
   const ipos = useIpos();
+  const market = useMarket();
   const [filter, setFilter] = useState<(typeof filters)[number]>("All");
   const [board, setBoard] = useState<(typeof boards)[number]>("All");
   const [exchange, setExchange] = useState<(typeof exchanges)[number]>("All");
@@ -173,9 +174,18 @@ function Home() {
           <h1 className="mt-1 text-3xl font-bold tracking-[-0.055em] sm:text-5xl">The numbers.</h1>
         </div>
         <div className="grid grid-cols-3 overflow-hidden rounded-xl border bg-card">
-          <MarketNumber label="Open" value={marketCounts.Open} />
-          <MarketNumber label="Upcoming" value={marketCounts.Upcoming} />
-          <MarketNumber label="Total" value={marketCounts.All} />
+          <MarketNumber
+            label="Open"
+            value={market.available && ipos.length ? marketCounts.Open : null}
+          />
+          <MarketNumber
+            label="Upcoming"
+            value={market.available && ipos.length ? marketCounts.Upcoming : null}
+          />
+          <MarketNumber
+            label="Total"
+            value={market.available && ipos.length ? marketCounts.All : null}
+          />
         </div>
       </header>
 
@@ -200,7 +210,10 @@ function Home() {
                 )}
               >
                 <span className={cn("h-2 w-2 rounded-full", statusDot[item])} />
-                {item} <span className="ml-1 opacity-60">{statusCounts[item]}</span>
+                {item}{" "}
+                <span className="ml-1 opacity-60">
+                  {market.available && ipos.length ? statusCounts[item] : "—"}
+                </span>
               </button>
             ))}
           </div>
@@ -305,7 +318,10 @@ function Home() {
             <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-primary">
               <CalendarDays className="h-4 w-4" /> IPO calendar · Next dates
             </h2>
-            <Link to="/calendar" className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:opacity-90">
+            <Link
+              to="/calendar"
+              className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:opacity-90"
+            >
               View calendar <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -360,10 +376,10 @@ function MarketFilter({
   );
 }
 
-function MarketNumber({ label, value }: { label: string; value: number }) {
+function MarketNumber({ label, value }: { label: string; value: number | null }) {
   return (
     <div className="min-w-20 border-l px-4 py-2.5 first:border-l-0">
-      <div className="num text-xl font-bold leading-none">{value}</div>
+      <div className="num text-xl font-bold leading-none">{value ?? "—"}</div>
       <div className="mt-1 text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">
         {label}
       </div>

@@ -173,21 +173,43 @@ export async function handleApi(request: Request): Promise<Response> {
         "/api/calendar",
         "/api/listing-performance",
         "/api/data-status",
+        "/api/dashboard",
+        "/api/health",
       ].includes(path)
     )
       throw new ServiceError("NOT_FOUND", 404);
     const snapshot = await readMarket(query);
+    if (path === "/api/dashboard") return json(snapshot, 200, true);
+    if (path === "/api/health")
+      return json(
+        {
+          status: snapshot.available ? (snapshot.items.length ? "ready" : "empty") : "unavailable",
+          database: snapshot.available ? "connected" : "unavailable",
+          recordCount: snapshot.items.length ? snapshot.total : null,
+          sourceCount: snapshot.sources.length,
+          sources: snapshot.sources,
+          generatedAt: snapshot.generatedAt,
+          coverage: { complete: false, limitedByProviders: true },
+        },
+        snapshot.available ? 200 : 503,
+        true,
+      );
     if (path === "/api/data-status")
       return json(
         {
-          available: true,
+          available: snapshot.available,
           sources: snapshot.sources,
           policy: {
             gmpHours: setting("GMP_STALE_HOURS", 24),
             subscriptionHours: setting("SUBSCRIPTION_STALE_HOURS", 1),
             masterHours: setting("MASTER_STALE_HOURS", 48),
           },
-          coverage: { count: snapshot.total, limitedByProviders: true },
+          coverage: {
+            count: snapshot.items.length ? snapshot.total : null,
+            complete: false,
+            limitedByProviders: true,
+            note: "Coverage is limited to configured third-party providers and has not been independently verified against licensed exchange feeds.",
+          },
         },
         200,
         true,

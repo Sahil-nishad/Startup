@@ -17,7 +17,7 @@ The active router is `src/routes`, with server-only adapters under `src/server/p
 | Comparison/calculator  | Selected database records, upper band, lot and valid GMP                        | Existing directory/detail components                             |
 | Research               | Static explanatory articles, no fabricated market records                       | Local article module                                             |
 
-List APIs share the `MarketSnapshot` envelope to keep the components reusable. `GET /api/data-status` exposes source health and coverage limitations. Detail pages initially load through TanStack server functions that invoke the same database reader. No visitor initiates an upstream sync.
+List APIs share the `MarketSnapshot` envelope to keep the components reusable. `GET /api/dashboard` returns that same snapshot for dashboard KPIs and rows; `GET /api/health` reports database readiness and explicitly marks provider coverage as incomplete; `GET /api/data-status` exposes source health and coverage limitations. An empty database is not proof of zero market activity: the UI shows an em dash and labels coverage unknown until records exist. Detail pages initially load through TanStack server functions that invoke the same database reader. No visitor initiates an upstream sync.
 
 ## Field-to-source mapping and limits
 

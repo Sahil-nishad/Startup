@@ -85,6 +85,12 @@ describe("provider schemas", () => {
   });
 });
 describe("PostgreSQL persistence", () => {
+  it("does not report an empty database as zero market IPOs", async () => {
+    const snapshot = await readMarket({}, db);
+    expect(snapshot.available).toBe(true);
+    expect(snapshot.items).toEqual([]);
+    expect(snapshot.total).toBeNull();
+  });
   it("migration is repeatable", async () => {
     await migrate(db);
     expect((await db.query("SELECT * FROM schema_migrations")).rows).toHaveLength(2);
@@ -174,6 +180,20 @@ describe("internal HTTP API", () => {
     expect((await handleApi(new Request(url, { headers: { "If-None-Match": etag } }))).status).toBe(
       200,
     );
+  });
+  it("exposes dashboard and health while treating empty coverage as unknown", async () => {
+    const dashboard = await handleApi(new Request("http://localhost/api/dashboard?limit=1"));
+    expect(dashboard.status).toBe(200);
+    expect((await dashboard.json()).data).toHaveProperty("items");
+    const health = await handleApi(new Request("http://localhost/api/health"));
+    expect(health.status).toBe(200);
+    expect((await health.json()).data.coverage).toMatchObject({
+      complete: false,
+      limitedByProviders: true,
+    });
+    const status = await handleApi(new Request("http://localhost/api/data-status"));
+    const coverage = (await status.json()).data.coverage;
+    expect(coverage).toMatchObject({ complete: false, limitedByProviders: true });
   });
   it("returns safe not found", async () =>
     expect((await handleApi(new Request("http://localhost/api/ipos/no-such-issue"))).status).toBe(

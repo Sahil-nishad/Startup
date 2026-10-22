@@ -113,7 +113,7 @@ export interface DataSource {
 }
 export interface MarketSnapshot {
   items: Ipo[];
-  total: number;
+  total: number | null;
   available: boolean;
   error: string | null;
   sources: DataSource[];
