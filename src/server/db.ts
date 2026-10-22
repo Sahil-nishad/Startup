@@ -40,6 +40,20 @@ function pgDb(pool: Pool): Db {
     },
   };
 }
+
+function postgresPoolOptions() {
+  const configuredMax = Number(process.env["DATABASE_POOL_MAX"] ?? 3);
+  const max = Number.isInteger(configuredMax) && configuredMax > 0 ? configuredMax : 3;
+  const sslEnabled =
+    process.env["DATABASE_SSL"] === "true" ||
+    (process.env["DATABASE_SSL"] === undefined && process.env["NODE_ENV"] === "production");
+  return {
+    max,
+    idleTimeoutMillis: 10000,
+    connectionTimeoutMillis: 8000,
+    ssl: sslEnabled ? { rejectUnauthorized: true } : undefined,
+  };
+}
 export function embeddedDb(pg: PGlite): Db {
   return {
     query: async <T>(sql: string, params: unknown[] = []) => ({
@@ -70,15 +84,7 @@ export function getDb(): Promise<Db> {
   if (!state.marketDatabase)
     state.marketDatabase = (async () => {
       if (process.env["DATABASE_URL"])
-        return pgDb(
-          new Pool({
-            connectionString: process.env["DATABASE_URL"],
-            max: 3,
-            idleTimeoutMillis: 10000,
-            connectionTimeoutMillis: 8000,
-            ssl: process.env["DATABASE_SSL"] === "true" ? { rejectUnauthorized: true } : undefined,
-          }),
-        );
+        return pgDb(new Pool({ connectionString: process.env["DATABASE_URL"], ...postgresPoolOptions() }));
       if (process.env["DATABASE_MODE"] === "pglite" && process.env["NODE_ENV"] !== "production") {
         const { PGlite } = await import("@electric-sql/pglite");
         const db = embeddedDb(new PGlite(process.env["PGLITE_PATH"] || ".local/market-db"));

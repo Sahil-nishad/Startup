@@ -42,6 +42,21 @@ Copy `.env.example` to `.env`. Keep it out of Git. Only `VITE_*` settings can be
 
 For local use, keep `DATABASE_MODE=pglite`, `PGLITE_PATH=.local/market-db` and `PUBLIC_APP_URL=http://localhost:8081`. PGlite is embedded PostgreSQL for one local process. In production set `DATABASE_URL` to a managed PostgreSQL/Supabase pooled connection, `DATABASE_SSL=true`, and `NODE_ENV=production`. Production fails closed without PostgreSQL and cannot use PGlite.
 
+### Supabase production setup
+
+This application uses Supabase Postgres through the server-only `pg` adapter. It does not expose a database key in the browser and does not use the Supabase Data API for market reads or writes. Create a Supabase project, then copy the Session Pooler connection string from Database settings into the host's `DATABASE_URL` secret. Use the pooler URL on port `5432`, keep `DATABASE_SSL=true`, and leave `DATABASE_POOL_MAX=3` unless the host and database plan justify a larger pool.
+
+The repository includes the CLI project under `supabase/` and two migrations:
+
+```sh
+npx supabase@latest migration list
+npx supabase@latest db push
+```
+
+Link the CLI once with the project reference and a scoped Supabase access token. The migrations create the IPO schema, indexes, RLS, server-only Data API denial policies and correction audit protection. Apply them before the first sync.
+
+The database has RLS enabled on every public table. `anon` and `authenticated` have no table privileges and explicit deny policies are present as defense in depth; only the server's private PostgreSQL connection can read or write market data. Never put `DATABASE_URL`, a service role key, or an access token in a `VITE_*` variable.
+
 Generate two separate random 32-byte hex tokens with:
 
 ```sh
@@ -59,6 +74,8 @@ On a hosted server store only the admin digest, not the raw `ADMIN_TOKEN`. Opera
 ## Database and migrations
 
 `src/db/migrations/001_market.sql` creates IPOs, source identifiers, raw observations, GMP/subscription histories, events, documents, listing results, financials, source health, sync runs, leases, HTTP cache, conflicts and correction audit. `002_audit.sql` protects corrections against UPDATE/DELETE and adds indexes and manually maintained fields.
+
+The canonical Supabase migrations are under `supabase/migrations/`. Keep those files in sync with future schema changes and apply them with the Supabase CLI or the Supabase migration tool before deploying the application.
 
 Run `npm run db:migrate` with the production database URL before deploying. The migration command needs repository source files and dependencies, not just `.output`. Migrations are idempotent. For PGlite, stop the web server before running this command; otherwise let the web process perform initialization itself.
 
@@ -127,6 +144,8 @@ For `field=document`, value is `{type,title,url,organization,filingDate}`; suppo
 ## Deployment and recovery
 
 The source remains Lovable-connected; never rewrite published Git history. The backend build targets Nitro's **Node server** because PostgreSQL pooling and local development storage require Node facilities. A static-only host is insufficient. Confirm that your Lovable deployment can execute this server and hold the required secrets before enabling jobs; its default Cloudflare target has not been verified for this backend. A Node-compatible deployment can run `node .output/server/index.mjs` after `npm ci`, migrations, and `npm run build`.
+
+Render can use the checked-in `render.yaml` Blueprint. It sets `npm ci && npm run build` as the build command and `npm run start` as the Node server command. Set the `sync: false` values in the Render dashboard, especially `DATABASE_URL`, `PUBLIC_APP_URL`, `SYNC_SECRET`, `ADMIN_ID` and `ADMIN_TOKEN_SHA256`. The existing GitHub Actions workflow can call the authenticated sync endpoint every 30 minutes after `MARKET_SYNC_ENABLED=true` is configured in the repository.
 
 Use Node 22.14+ and managed PostgreSQL with TLS. Set production URL/secrets in the host dashboard, configure the scheduler, run one authenticated sync, and perform the smoke procedure below. Neither a production database nor a public deployment is provisioned by local `.env` generation. No successful deployment is claimed until that environment has passed the smoke procedure.
 

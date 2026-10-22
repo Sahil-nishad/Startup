@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: startup
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/data-status
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_MODE
+        value: postgres
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL
+        value: "true"
+      - key: DATABASE_POOL_MAX
+        value: "3"
+      - key: PUBLIC_APP_URL
+        sync: false
+      - key: SYNC_SECRET
+        sync: false
+      - key: ADMIN_ID
+        sync: false
+      - key: ADMIN_TOKEN_SHA256
+        sync: false
+      - key: XFLOT_ENABLED
+        value: "true"
+      - key: IPOS_MARKETS_ENABLED
+        value: "true"
+      - key: MASTER_SYNC_MINUTES
+        value: "30"
+      - key: GMP_SYNC_MINUTES
+        value: "30"
+      - key: SUBSCRIPTION_SYNC_MINUTES
+        value: "30"
