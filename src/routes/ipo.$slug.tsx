@@ -3,7 +3,7 @@ import { subscriptionLabel } from "@/lib/market/rules";
 import { num, subLabel } from "@/lib/ipo-data";
 import { getIpo } from "@/lib/market/server-functions";
 import { DataQualityPanel, IssueNote, ObservationNote } from "@/components/data-quality";
-import { CompareButton, WatchlistButton } from "@/components/ipo-actions";
+import { WatchlistButton } from "@/components/ipo-actions";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
 import {
@@ -119,7 +119,6 @@ function Detail() {
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
           <WatchlistButton ipo={ipo} />
-          <CompareButton ipo={ipo} />
           <div className="rounded-xl border bg-card px-4 py-3 text-right">
             <div className="text-xs text-muted-foreground">Unofficial GMP</div>
             <div className="text-2xl">

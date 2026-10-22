@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
 const WATCHLIST_KEY = "ipolens-watchlist";
-const COMPARISON_KEY = "ipolens-comparison";
 const CHANGE_EVENT = "ipolens-list-change";
 
 function read(key: string) {
@@ -51,4 +50,3 @@ function useStoredSlugs(key: string, maximum?: number) {
 }
 
 export const useWatchlist = () => useStoredSlugs(WATCHLIST_KEY);
-export const useComparison = () => useStoredSlugs(COMPARISON_KEY, 4);

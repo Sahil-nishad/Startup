@@ -13,7 +13,7 @@ import {
 } from "@/lib/ipo-data";
 import { CatBadge, Delta, Initials, StatusBadge } from "./site";
 import { FreshnessBadge } from "./data-quality";
-import { CompareButton, WatchlistButton } from "./ipo-actions";
+import { WatchlistButton } from "./ipo-actions";
 
 export type SortKey = "name" | "open" | "close" | "price" | "gmp" | "sub" | "listing" | "size";
 export const sortFns: Record<SortKey, (a: Ipo, b: Ipo) => number> = {
@@ -152,7 +152,6 @@ export function IpoTable({
                 <td className="px-3 text-right">
                   <div className="flex justify-end gap-1.5">
                     <WatchlistButton ipo={i} compact />
-                    <CompareButton ipo={i} compact />
                   </div>
                 </td>
               </tr>

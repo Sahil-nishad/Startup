@@ -1,11 +1,11 @@
-import { IpoComparison } from "@/components/market-tools";
 import { useIpos } from "@/lib/market/context";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Columns3, Search, SlidersHorizontal, Star, X } from "lucide-react";
+import { Search, SlidersHorizontal, Star, X } from "lucide-react";
 import { gmpPct, statusOf } from "@/lib/ipo-data";
 import { IpoTable, sortFns, type SortKey } from "@/components/ipo-table";
 import { PageHead, Panel } from "@/components/site";
-import { useComparison, useWatchlist } from "@/lib/ipo-lists";
+import { MarketSelect } from "@/components/market-select";
+import { useWatchlist } from "@/lib/ipo-lists";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -103,7 +103,6 @@ function IposPage() {
   const s = Route.useSearch();
   const navigate = useNavigate({ from: "/ipos" });
   const watchlist = useWatchlist();
-  const comparison = useComparison();
   const [advancedOpen, setAdvancedOpen] = useState(
     Boolean(
       s.sector ||
@@ -179,28 +178,6 @@ function IposPage() {
     s.freshness,
   ].filter((value) => value !== undefined).length;
 
-  const Sel = ({
-    k,
-    opts,
-    label,
-  }: {
-    k: "status" | "category" | "exchange" | "sector" | "financials" | "freshness";
-    opts: string[];
-    label: string;
-  }) => (
-    <select
-      aria-label={label}
-      value={s[k] ?? ""}
-      onChange={(e) => set({ [k]: e.target.value || undefined })}
-      className={`h-9 rounded-md border bg-card px-2 text-sm ${s[k] ? "border-primary text-primary" : ""}`}
-    >
-      <option value="">{label}: All</option>
-      {opts.map((o) => (
-        <option key={o}>{o}</option>
-      ))}
-    </select>
-  );
-
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       <PageHead
@@ -218,9 +195,9 @@ function IposPage() {
               className="h-9 w-60 rounded-md border bg-card pl-8 pr-2 text-sm outline-none focus:border-primary"
             />
           </div>
-          <Sel k="status" label="Status" opts={["Open", "Upcoming", "Closed", "Listed"]} />
-          <Sel k="category" label="Category" opts={["Mainboard", "SME", "Debt"]} />
-          <Sel k="exchange" label="Exchange" opts={["NSE", "BSE"]} />
+          <IpoFilterSelect label="Status" value={s.status} options={["Open", "Upcoming", "Closed", "Listed"]} onChange={(value) => set({ status: value })} />
+          <IpoFilterSelect label="Category" value={s.category} options={["Mainboard", "SME", "Debt"]} onChange={(value) => set({ category: value })} />
+          <IpoFilterSelect label="Exchange" value={s.exchange} options={["NSE", "BSE"]} onChange={(value) => set({ exchange: value })} />
           <button
             type="button"
             aria-pressed={s.watchlist === true}
@@ -258,9 +235,9 @@ function IposPage() {
         </div>
         {advancedOpen && (
           <div className="grid gap-3 border-b bg-muted/20 p-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Sel k="sector" label="Sector" opts={sectors} />
-            <Sel k="financials" label="Financials" opts={["verified", "profitable"]} />
-            <Sel k="freshness" label="Data quality" opts={["fresh", "review"]} />
+            <IpoFilterSelect label="Sector" value={s.sector} options={sectors} onChange={(value) => set({ sector: value })} />
+            <IpoFilterSelect label="Financials" value={s.financials} options={["verified", "profitable"]} onChange={(value) => set({ financials: value as S["financials"] })} />
+            <IpoFilterSelect label="Data quality" value={s.freshness} options={["fresh", "review"]} onChange={(value) => set({ freshness: value as S["freshness"] })} />
             <NumberFilter label="Min GMP %" value={s.gmpMin} onChange={(value) => set({ gmpMin: value })} />
             <NumberFilter label="Max GMP %" value={s.gmpMax} onChange={(value) => set({ gmpMax: value })} />
             <NumberFilter label="Min subscription ×" value={s.subMin} onChange={(value) => set({ subMin: value })} />
@@ -275,18 +252,16 @@ function IposPage() {
           onSort={(k) => set({ sort: k, dir: sort === k && dir === "desc" ? "asc" : "desc" })}
         />
         <div className="flex items-center justify-between border-t px-3 py-2 text-sm">
-          <label className="flex items-center gap-2 text-muted-foreground">
+          <div className="flex items-center gap-2 text-muted-foreground">
             Rows
-            <select
-              value={size}
-              onChange={(e) => set({ size: Number(e.target.value) })}
-              className="h-8 rounded-md border bg-card px-1"
-            >
-              {[10, 25, 50].map((n) => (
-                <option key={n}>{n}</option>
-              ))}
-            </select>
-          </label>
+            <MarketSelect
+              label="Rows per page"
+              value={String(size)}
+              onValueChange={(value) => set({ size: Number(value) })}
+              options={[10, 25, 50].map((n) => ({ value: String(n), label: String(n) }))}
+              className="h-8 min-w-16 rounded-lg px-2"
+            />
+          </div>
           <div className="flex items-center gap-2">
             <button
               disabled={page <= 1}
@@ -308,26 +283,34 @@ function IposPage() {
           </div>
         </div>
       </Panel>
-      {comparison.slugs.length > 0 && (
-        <div className="sticky bottom-4 z-20 mt-4 flex flex-wrap items-center gap-3 rounded-xl border bg-popover/95 px-4 py-3 shadow-xl backdrop-blur">
-          <Columns3 className="h-4 w-4 text-primary" />
-          <div className="min-w-0 flex-1 text-xs">
-            <span className="font-bold">{comparison.slugs.length} selected</span>
-            <span className="ml-2 text-muted-foreground">
-              {comparison.slugs
-                .map((slug) => ipos.find((ipo) => ipo.slug === slug)?.name)
-                .filter(Boolean)
-                .join(" · ")}
-            </span>
-          </div>
-          <a href="#compare" className="rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground">
-            Compare now
-          </a>
-          <button onClick={comparison.clear} className="text-xs font-semibold text-muted-foreground">Clear</button>
-        </div>
-      )}
-      <IpoComparison ipos={ipos} />
     </div>
+  );
+}
+
+function IpoFilterSelect({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string | undefined;
+  options: readonly string[];
+  onChange: (value: string | undefined) => void;
+}) {
+  return (
+    <MarketSelect
+      label={label}
+      prefix={label}
+      value={value ?? "__all__"}
+      onValueChange={(next) => onChange(next === "__all__" ? undefined : next)}
+      options={[
+        { value: "__all__", label: "All" },
+        ...options.map((option) => ({ value: option, label: option })),
+      ]}
+      className="max-w-[16rem] text-xs"
+      active={value !== undefined}
+    />
   );
 }
 

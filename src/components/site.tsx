@@ -1,10 +1,10 @@
 import { useIpos, useMarket } from "@/lib/market/context";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Search, X, Menu, LineChart, Moon, Sun } from "lucide-react";
+import { CalendarDays, Search, X, Menu, LineChart, Moon, Sun } from "lucide-react";
 import { articles, statusOf, type Ipo, type Status } from "@/lib/ipo-data";
 import { cn } from "@/lib/utils";
-import { ComparisonLink, WatchlistLink } from "./ipo-actions";
+import { WatchlistLink } from "./ipo-actions";
 
 const nav = [
   { to: "/ipos", label: "IPOs" },
@@ -55,9 +55,15 @@ export function Header() {
             <Link
               key={n.to}
               to={n.to}
-              className="rounded-md px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              activeProps={{ className: "text-foreground font-semibold bg-muted" }}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm transition-colors",
+                n.to === "/calendar"
+                  ? "bg-primary/10 font-semibold text-primary hover:bg-primary/15"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+              )}
+              activeProps={{ className: n.to === "/calendar" ? "bg-primary text-primary-foreground" : "text-foreground font-semibold bg-muted" }}
             >
+              {n.to === "/calendar" && <CalendarDays className="h-3.5 w-3.5" />}
               {n.label}
             </Link>
           ))}
@@ -74,7 +80,6 @@ export function Header() {
             </kbd>
           </button>
           <WatchlistLink />
-          <ComparisonLink />
           <ThemeToggle />
           <button
             aria-label="Menu"
@@ -92,8 +97,12 @@ export function Header() {
               key={n.to}
               to={n.to}
               onClick={() => setMenu(false)}
-              className="rounded-md px-3 py-2 text-sm hover:bg-muted"
+              className={cn(
+                "inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-muted",
+                n.to === "/calendar" && "bg-primary/10 font-semibold text-primary",
+              )}
             >
+              {n.to === "/calendar" && <CalendarDays className="h-4 w-4" />}
               {n.label}
             </Link>
           ))}

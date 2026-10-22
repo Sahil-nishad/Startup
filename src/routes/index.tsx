@@ -17,6 +17,7 @@ import {
   type Status,
 } from "@/lib/ipo-data";
 import { Delta, StatusBadge } from "@/components/site";
+import { MarketSelect } from "@/components/market-select";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
@@ -132,7 +133,14 @@ function Home() {
         }),
     [filter, scopedIpos, today],
   );
-  const rows = filteredRows.slice(0, pageSize);
+  // Keep the dashboard focused on the ten most recently closed issues.
+  let closedShown = 0;
+  const dashboardRows = filteredRows.filter((ipo) => {
+    if (statusOf(ipo) !== "Closed") return true;
+    closedShown += 1;
+    return closedShown <= 10;
+  });
+  const rows = dashboardRows.slice(0, pageSize);
   const maxGmp = [...ipos]
     .filter(
       (ipo) => (statusOf(ipo) === "Open" || isCurrentUpcoming(ipo, today)) && gmpPct(ipo) !== null,
@@ -216,22 +224,17 @@ function Home() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 border-b bg-muted/20 px-3 py-2">
-          <label className="flex h-8 items-center gap-1.5 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             Show
-            <select
-              aria-label="Rows per page"
-              value={pageSize}
-              onChange={(event) => setPageSize(Number(event.target.value))}
-              className="h-8 rounded-lg border bg-background px-2 font-bold text-foreground outline-none"
-            >
-              {[25, 50, 100].map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
+            <MarketSelect
+              label="Rows per page"
+              value={String(pageSize)}
+              onValueChange={(value) => setPageSize(Number(value))}
+              options={[25, 50, 100].map((size) => ({ value: String(size), label: String(size) }))}
+              className="h-8 min-w-16 rounded-lg bg-background px-2"
+            />
             entries
-          </label>
+          </div>
           <span className="mx-1 hidden h-4 w-px bg-border sm:block" />
           <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
           <MarketFilter
@@ -254,7 +257,7 @@ function Home() {
             </button>
           )}
           <span className="ml-auto text-[10px] font-medium text-muted-foreground">
-            {filteredRows.length} matching IPOs
+            {dashboardRows.length} dashboard IPOs
           </span>
           <label className="flex h-9 min-w-[13rem] items-center gap-2 rounded-lg border bg-background px-3 sm:w-64">
             <Search className="h-3.5 w-3.5 text-muted-foreground" />
@@ -270,7 +273,10 @@ function Home() {
         <MarketTable rows={rows} />
         <div className="flex items-center justify-between border-t px-4 py-3 text-xs text-muted-foreground">
           <span>
-            Showing {rows.length} of {filteredRows.length} records
+            Showing {rows.length} of {dashboardRows.length} dashboard IPOs
+            {statusCounts.Closed > 10 && (filter === "All" || filter === "Closed")
+              ? " · latest 10 closed shown"
+              : ""}
           </span>
           <Link
             to="/ipos"
@@ -294,13 +300,13 @@ function Home() {
           value={maxSub ? subLabel(maxSub) : "—"}
           sub="Total demand"
         />
-        <section className="rounded-2xl border bg-card p-4">
+        <section className="rounded-2xl border border-primary/30 bg-accent/40 p-4">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-              Next dates
+            <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-primary">
+              <CalendarDays className="h-4 w-4" /> IPO calendar · Next dates
             </h2>
-            <Link to="/calendar" aria-label="IPO calendar">
-              <CalendarDays className="h-4 w-4" />
+            <Link to="/calendar" className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:opacity-90">
+              View calendar <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
           <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
@@ -339,20 +345,18 @@ function MarketFilter({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="flex h-8 items-center gap-1.5 rounded-lg border bg-background px-2.5 text-[11px] shadow-sm">
-      <span className="font-medium text-muted-foreground">{label}</span>
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="bg-transparent font-bold text-foreground outline-none"
-      >
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option === "All" ? `All ${label.toLowerCase()}s` : option}
-          </option>
-        ))}
-      </select>
-    </label>
+    <MarketSelect
+      label={label}
+      prefix={label}
+      value={value}
+      onValueChange={onChange}
+      options={options.map((option) => ({
+        value: option,
+        label: option === "All" ? `All ${label.toLowerCase()}s` : option,
+      }))}
+      className="h-8 rounded-lg bg-background px-2.5 text-[11px]"
+      active={value !== "All"}
+    />
   );
 }
 
