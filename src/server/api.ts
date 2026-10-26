@@ -216,6 +216,15 @@ export async function handleApi(request: Request): Promise<Response> {
       );
     return json(snapshot, 200, true);
   } catch (e) {
+    if (!(e instanceof ServiceError) && !(e instanceof z.ZodError)) {
+      console.error("Market API request failed", {
+        requestId,
+        code:
+          e && typeof e === "object" && "code" in e && typeof e.code === "string"
+            ? e.code
+            : "UNEXPECTED_ERROR",
+      });
+    }
     return json(
       e instanceof ServiceError
         ? e.code
