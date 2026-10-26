@@ -85,7 +85,7 @@ Corrections are append-only audit entries. Verified overrides are materialized f
 
 ## Synchronization
 
-Run the website, then `npm run admin -- sync auto`. Run `npm run sync:worker` in a separate terminal to keep syncing while developing. The worker calls the authenticated endpoint; it does not open the embedded database. It uses one request at a time and waits 30 minutes after each completed run. Stop it with Ctrl+C.
+Run the website, then `npm run admin -- sync auto`. Run `npm run sync:worker` in a separate terminal to keep syncing while developing. The worker calls the authenticated endpoint; it does not open the embedded database. It uses one request at a time and waits one hour after each completed run by default. Stop it with Ctrl+C.
 
 Jobs: `auto`, `master`, `gmp`, `history`, `subscription`, `listing`, `documents`, `health`. Documents are maintained by manual evidence review; that job reports this instead of silently pretending to fetch filings. `listing` checks explicit listing results from the master feed. `history` uses bounded detail refreshes.
 
@@ -96,7 +96,7 @@ Jobs: `auto`, `master`, `gmp`, `history`, `subscription`, `listing`, `documents`
 - A renewable database lease prevents overlapping jobs; HTTP ETag/Last-Modified requests are conditional where supported. Successful persistence is idempotent and never deletes an issue missing from a feed.
 - Failed/partial runs, record counts, source errors, latency and rejection reasons are available to administrators. A provider outage retains database data. This version exposes internal health; it does not send external alert messages.
 
-The optional GitHub Actions workflow calls the endpoint at minute 0 and 30 of each hour. Enable repository variable `MARKET_SYNC_ENABLED=true`, set `PUBLIC_APP_URL`, and add secret `SYNC_SECRET`. Scheduling may be delayed by GitHub and consumes the repository's action allowance; verify your plan. Do not run multiple independent schedulers unnecessarily. Hosting execution limits must accommodate a bounded sync; lower batch size/timeouts if needed.
+The optional GitHub Actions workflow calls the endpoint at minute 0 of each hour. Enable repository variable `MARKET_SYNC_ENABLED=true`, set `PUBLIC_APP_URL`, and add secret `SYNC_SECRET`. Scheduling may be delayed by GitHub and consumes the repository's action allowance; verify your plan. Do not run multiple independent schedulers unnecessarily. Hosting execution limits must accommodate a bounded sync; lower batch size/timeouts if needed.
 
 Disable a failing source with `XFLOT_ENABLED=false` or `IPOS_MARKETS_ENABLED=false` and restart/redeploy. Saved records remain readable and their observation timestamps do not change.
 
@@ -145,7 +145,7 @@ For `field=document`, value is `{type,title,url,organization,filingDate}`; suppo
 
 The source remains Lovable-connected; never rewrite published Git history. The backend build targets Nitro's **Node server** because PostgreSQL pooling and local development storage require Node facilities. A static-only host is insufficient. Confirm that your Lovable deployment can execute this server and hold the required secrets before enabling jobs; its default Cloudflare target has not been verified for this backend. A Node-compatible deployment can run `node .output/server/index.mjs` after `npm ci`, migrations, and `npm run build`.
 
-Render can use the checked-in `render.yaml` Blueprint. It sets `npm ci && npm run build` as the build command and `npm run start` as the Node server command. Set the `sync: false` values in the Render dashboard, especially `DATABASE_URL`, `PUBLIC_APP_URL`, `SYNC_SECRET`, `ADMIN_ID` and `ADMIN_TOKEN_SHA256`. The existing GitHub Actions workflow can call the authenticated sync endpoint every 30 minutes after `MARKET_SYNC_ENABLED=true` is configured in the repository.
+Render can use the checked-in `render.yaml` Blueprint. It sets `npm ci && npm run build` as the build command and `npm run start` as the Node server command. Set the `sync: false` values in the Render dashboard, especially `DATABASE_URL`, `PUBLIC_APP_URL`, `SYNC_SECRET`, `ADMIN_ID` and `ADMIN_TOKEN_SHA256`. The existing GitHub Actions workflow can call the authenticated sync endpoint hourly after `MARKET_SYNC_ENABLED=true` is configured in the repository.
 
 Use Node 22.14+ and managed PostgreSQL with TLS. Set production URL/secrets in the host dashboard, configure the scheduler, run one authenticated sync, and perform the smoke procedure below. Neither a production database nor a public deployment is provisioned by local `.env` generation. No successful deployment is claimed until that environment has passed the smoke procedure.
 

@@ -3,7 +3,7 @@ const secret = process.env["SYNC_SECRET"];
 if (!secret || secret.length < 32)
   throw new Error("Configure SYNC_SECRET before running the worker");
 const base = process.env["PUBLIC_APP_URL"] || "http://localhost:8081";
-const interval = Math.max(120, Number(process.env["WORKER_INTERVAL_SECONDS"]) || 1800) * 1000;
+const interval = Math.max(120, Number(process.env["WORKER_INTERVAL_SECONDS"]) || 3600) * 1000;
 async function tick() {
   try {
     const response = await fetch(base + "/api/admin/sync", {

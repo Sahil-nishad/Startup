@@ -2,7 +2,7 @@ name: IPO data synchronization
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0,30 * * * *"
+    - cron: "0 * * * *"
 permissions: {}
 concurrency:
   group: market-sync

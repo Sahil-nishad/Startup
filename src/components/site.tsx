@@ -325,10 +325,21 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
 export function ThemeToggle() {
   const [dark, setDark] = useState(false);
   useEffect(() => {
-    setDark(document.documentElement.classList.contains("dark"));
+    const sync = () => setDark(document.documentElement.classList.contains("dark"));
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== "ipolens-theme" && event.key !== null) return;
+      const next =
+        event.newValue === "dark" ||
+        (event.newValue !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      document.documentElement.classList.toggle("dark", next);
+      sync();
+    };
+    sync();
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
   const toggle = () => {
-    const next = !dark;
+    const next = !document.documentElement.classList.contains("dark");
     setDark(next);
     document.documentElement.classList.toggle("dark", next);
     try {

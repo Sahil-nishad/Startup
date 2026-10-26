@@ -108,6 +108,12 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              'try{const t=localStorage.getItem("ipolens-theme");document.documentElement.classList.toggle("dark",t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches))}catch{}',
+          }}
+        />
         <HeadContent />
       </head>
       <body>
@@ -121,16 +127,6 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const initial = Route.useLoaderData();
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("ipolens-theme");
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      document.documentElement.classList.toggle("dark", stored ? stored === "dark" : prefersDark);
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
