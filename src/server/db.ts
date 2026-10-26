@@ -41,17 +41,27 @@ function pgDb(pool: Pool): Db {
   };
 }
 
-function postgresPoolOptions() {
+function postgresPoolOptions(connectionString: string) {
   const configuredMax = Number(process.env["DATABASE_POOL_MAX"] ?? 3);
   const max = Number.isInteger(configuredMax) && configuredMax > 0 ? configuredMax : 3;
+  const url = new URL(connectionString);
+  const urlSslMode = url.searchParams.get("sslmode")?.toLowerCase();
+  url.searchParams.delete("sslmode");
+  const configuredSsl = process.env["DATABASE_SSL"];
   const sslEnabled =
-    process.env["DATABASE_SSL"] === "true" ||
-    (process.env["DATABASE_SSL"] === undefined && process.env["NODE_ENV"] === "production");
+    configuredSsl === "true" ||
+    (configuredSsl === undefined &&
+      (process.env["NODE_ENV"] === "production" || (urlSslMode && urlSslMode !== "disable")));
+  const caBase64 = process.env["DATABASE_CA_BASE64"];
+  const ca = caBase64 ? Buffer.from(caBase64, "base64").toString("utf8") : undefined;
+  if (caBase64 && !ca?.includes("-----BEGIN CERTIFICATE-----"))
+    throw new ServiceError("DATABASE_CA_INVALID", 500);
   return {
+    connectionString: url.toString(),
     max,
     idleTimeoutMillis: 10000,
     connectionTimeoutMillis: 8000,
-    ssl: sslEnabled ? { rejectUnauthorized: true } : undefined,
+    ssl: sslEnabled ? { rejectUnauthorized: true, ...(ca ? { ca } : {}) } : undefined,
   };
 }
 export function embeddedDb(pg: PGlite): Db {
@@ -84,7 +94,7 @@ export function getDb(): Promise<Db> {
   if (!state.marketDatabase)
     state.marketDatabase = (async () => {
       if (process.env["DATABASE_URL"])
-        return pgDb(new Pool({ connectionString: process.env["DATABASE_URL"], ...postgresPoolOptions() }));
+        return pgDb(new Pool(postgresPoolOptions(process.env["DATABASE_URL"])));
       if (process.env["DATABASE_MODE"] === "pglite" && process.env["NODE_ENV"] !== "production") {
         const { PGlite } = await import("@electric-sql/pglite");
         const db = embeddedDb(new PGlite(process.env["PGLITE_PATH"] || ".local/market-db"));
