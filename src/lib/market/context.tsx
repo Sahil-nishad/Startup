@@ -25,8 +25,8 @@ export function MarketProvider({
       return ((await response.json()) as { data: MarketSnapshot }).data;
     },
     initialData: initial,
-    staleTime: 30000,
-    refetchInterval: 60000,
+    staleTime: 5 * 60_000,
+    refetchInterval: 5 * 60_000,
     retry: 1,
   });
   return (
@@ -53,9 +53,11 @@ export function useIpos(endpoint = "/api/ipos") {
       return ((await response.json()) as { data: MarketSnapshot }).data;
     },
     initialData: market,
-    staleTime: 30000,
-    refetchInterval: 60000,
+    enabled: endpoint !== "/api/ipos",
+    staleTime: 5 * 60_000,
+    refetchInterval: 5 * 60_000,
     retry: 1,
   });
-  return query.data.items;
+  return endpoint === "/api/ipos" ? market.items : query.data.items;
 }
+

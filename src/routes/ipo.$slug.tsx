@@ -105,11 +105,11 @@ function Detail() {
         </Link>{" "}
         / {ipo.name}
       </nav>
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div className="flex items-center gap-3">
+      <div className="mb-6 flex flex-col items-stretch gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3 sm:items-center">
           <Initials name={ipo.name} />
-          <div>
-            <h1 className="text-3xl font-bold tracking-[-0.04em]">{ipo.name} IPO</h1>
+          <div className="min-w-0 flex-1">
+            <h1 className="break-words text-3xl font-bold tracking-[-0.04em]">{ipo.name} IPO</h1>
             <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
               <StatusBadge status={statusOf(ipo)} />
               <CatBadge ipo={ipo} />
@@ -117,9 +117,9 @@ function Detail() {
             </div>
           </div>
         </div>
-        <div className="flex flex-wrap items-center justify-end gap-2">
+        <div className="flex items-center justify-between gap-2 sm:justify-end">
           <WatchlistButton ipo={ipo} />
-          <div className="rounded-xl border bg-card px-4 py-3 text-right">
+          <div className="min-w-0 flex-1 rounded-xl border bg-card px-4 py-3 text-right sm:flex-none">
             <div className="text-xs text-muted-foreground">Unofficial GMP</div>
             <div className="text-2xl">
               <Delta value={g}>{inr(g)}</Delta>{" "}
@@ -1116,3 +1116,4 @@ function Financials({ ipo }: { ipo: Ipo }) {
     </div>
   );
 }
+

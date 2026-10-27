@@ -98,8 +98,18 @@ export async function readMarket(filter: ReadFilter = {}, db?: Db): Promise<Mark
         : Promise.resolve({ rows: [] }),
     ),
   );
+  const indexed = loaded.map(({ rows }) => {
+    const index = new Map<unknown, Row[]>();
+    for (const row of rows) {
+      const id = row["ipo_id"];
+      const bucket = index.get(id);
+      if (bucket) bucket.push(row);
+      else index.set(id, [row]);
+    }
+    return index;
+  });
   const by = (table: (typeof tables)[number], id: unknown) =>
-    loaded[tables.indexOf(table)]!.rows.filter((r) => r["ipo_id"] === id);
+    indexed[tables.indexOf(table)]!.get(id) ?? [];
   const items = rows.map((base) => {
     const id = base["id"],
       row = { ...base };
@@ -300,3 +310,4 @@ export async function safeSnapshot(): Promise<MarketSnapshot> {
     };
   }
 }
+
