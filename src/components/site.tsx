@@ -350,11 +350,13 @@ export function ThemeToggle() {
   };
   return (
     <button
+      type="button"
       aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
       onClick={toggle}
       className="grid h-9 w-9 place-items-center rounded-md border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
     >
-      {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+      <Sun className="hidden h-4 w-4 dark:block" aria-hidden="true" />
+      <Moon className="block h-4 w-4 dark:hidden" aria-hidden="true" />
     </button>
   );
 }
