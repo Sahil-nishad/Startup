@@ -2,16 +2,15 @@ name: IPO data synchronization
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "17 * * * *"
 permissions: {}
 concurrency:
   group: market-sync
   cancel-in-progress: false
 jobs:
   sync:
-    if: vars.MARKET_SYNC_ENABLED == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 6
     steps:
       - name: Call authenticated bounded sync
         env:
@@ -19,7 +18,7 @@ jobs:
           SYNC_SECRET: ${{ secrets.SYNC_SECRET }}
         run: |
           test -n "$APP_URL" && test -n "$SYNC_SECRET"
-          curl --fail-with-body --silent --show-error --max-time 180 \
+          curl --fail-with-body --silent --show-error --connect-timeout 20 --max-time 290 \
             -H "Authorization: Bearer $SYNC_SECRET" \
             -H 'Content-Type: application/json' \
             --data '{"job":"auto"}' "$APP_URL/api/admin/sync"
